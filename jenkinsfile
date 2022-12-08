@@ -1,0 +1,32 @@
+pipeline {
+    agent any
+    tools{
+        maven 'maven3.6.3'
+    }
+    stages{
+        stage('build maven'){
+            steps{
+                checkout([$class: 'GitSCM', branches: [[name: '*/UpdatedSeleniumAssignment']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/veerprashant/Selenium.git']]])
+                sh 'mvn clean install'
+            }
+
+        }
+        stage('build docker image'){
+            steps{
+                script{
+                    sh 'docker build -t veerprashant/selenium .'
+                }
+            }
+        }
+        stage('push docker image to docker hub'){
+            steps{
+                script{
+                    withCredentials([string(credentialsId: 'user', variable: 'UserName'), string(credentialsId: 'password', variable: 'Password')])  {
+                    sh 'docker login -u ${UserName} -p ${Password}'
+                    sh 'docker push ${UserName}/selenium'
+}
+                    }
+            }
+        }
+    }
+}
